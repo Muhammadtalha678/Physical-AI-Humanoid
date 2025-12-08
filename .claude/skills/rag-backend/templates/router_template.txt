@@ -1,0 +1,15 @@
+from fastapi import APIRouter
+from src.controllers.embeddings_controller import store_embeddings, agent_handler
+
+
+router = APIRouter(prefix="/api")
+
+
+@router.post("/embeddings")
+async def upload_embeddings(data: dict):
+return await store_embeddings(data["vector"], data.get("payload", {}))
+
+
+@router.post("/query")
+async def query(data: dict):
+return await agent_handler(data["query"], data.get("top_k",5))
