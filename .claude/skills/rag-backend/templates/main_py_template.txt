@@ -1,0 +1,31 @@
+from fastapi import FastAPI
+from src.routers.embeddings_router import router as embeddings_router
+from src.routers.query_router import router as query_router
+from contextlib import asynccontextmanager
+from src.lib.configs import settings
+from src.lib.openaiagentsdk_config import AgentConfig
+from src.lib.vectordb_connection import ConnectDb
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db = ConnectDb(settings.qdrant_url)
+    await db.connection()
+    print("Db connection started!")
+    config_agent = AgentConfig(
+        base_url=settings.openrouter_api,
+        api_key=settings.api_key,
+        model_name=settings.model_name
+    )
+    app.state.database = await db.get_database()
+    app.state.agent_config = config_agent
+    yield
+    await db.close_connection()
+    print("Db connection closed!")
+
+app = FastAPI(lifespan=lifespan)
+app.include_router(embeddings_router)
+app.include_router(query_router)
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

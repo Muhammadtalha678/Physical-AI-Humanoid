@@ -1,0 +1,22 @@
+from src.lib.vectordb_connection import get_qdrant
+from fastapi import HTTPException
+import uuid
+
+async def store_embeddings(vector: list, payload: dict):
+    try:
+        client = get_qdrant()
+        client.upsert(
+            collection_name="rag_collection",
+            points=[{
+                "id": str(uuid.uuid4()),
+                "vector": vector,
+                "payload": payload
+            }]
+        )
+        return {"status": "success", "message": "Embedding stored."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def agent_handler(query: str, top_k: int = 5):
+    # call OpenAIAgentSDK, search Qdrant, process response
+    return {"response": "Processed result"}
