@@ -1,15 +1,13 @@
 from fastapi import APIRouter
-from src.controllers.embeddings_controller import store_embeddings, agent_handler
+from src.controllers.rag_controller import process_documents, run_query
 
-
-router = APIRouter(prefix="/api")
-
+router = APIRouter()
 
 @router.post("/embeddings")
-async def upload_embeddings(data: dict):
-return await store_embeddings(data["vector"], data.get("payload", {}))
-
+async def create_embeddings(data: dict):
+    folder_path = data["folder_path"]
+    return await process_documents(folder_path)
 
 @router.post("/query")
-async def query(data: dict):
-return await agent_handler(data["query"], data.get("top_k",5))
+async def query_rag(data: dict):
+    return await run_query(data["query"])

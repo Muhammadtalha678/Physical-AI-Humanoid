@@ -1,22 +1,77 @@
-from src.lib.vectordb_connection import get_qdrant
-from fastapi import HTTPException
+import os
 import uuid
+from fastapi import HTTPException
+from qdrant_client.http import models
+from src.lib.configs import env_config
+from src.lib.vectordb_connection import get_qdrant_client
+from src.lib.google_embedding import embed_text
+from src.lib.chunker import chunk_markdown
 
-async def store_embeddings(vector: list, payload: dict):
+async def process_documents(folder_path: str):
     try:
-        client = get_qdrant()
-        client.upsert(
-            collection_name="rag_collection",
-            points=[{
-                "id": str(uuid.uuid4()),
-                "vector": vector,
-                "payload": payload
-            }]
+        client = get_qdrant_client()
+        all_files = []
+
+        # recursively get all md files
+        for root, dirs, files in os.walk(folder_path):
+            for f in files:
+                if f.endswith(".md") or f.endswith(".txt"):
+                    all_files.append(os.path.join(root, f))
+
+        if not all_files:
+            return {"message": "No markdown files found."}
+
+        for file_path in all_files:
+            with open(file_path, "r", encoding="utf-8") as f:
+                text = f.read()
+
+            chunks = chunk_markdown(text)
+
+            for i, chunk in enumerate(chunks):
+                embedding = embed_text(chunk)
+
+                client.upsert(
+                    collection_name=env_config.collection_name,
+                    points=[
+                        models.PointStruct(
+                            id=str(uuid.uuid4()),
+                            vector=embedding,
+                            payload={
+                                "file_path": file_path,
+                                "chunk_index": i,
+                                "chunk_text": chunk
+                            }
+                        )
+                    ]
+                )
+
+        return {"status": "success", "files_processed": len(all_files)}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+async def run_query(query: str):
+    try:
+        client = get_qdrant_client()
+        embedding = embed_text(query)
+
+        search = client.search(
+            collection_name=env_config.collection_name,
+            query_vector=embedding,
+            limit=5
         )
-        return {"status": "success", "message": "Embedding stored."}
+
+        return {
+            "results": [
+                {
+                    "score": r.score,
+                    "file_path": r.payload.get("file_path"),
+                    "chunk_text": r.payload.get("chunk_text")
+                }
+                for r in search
+            ]
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-async def agent_handler(query: str, top_k: int = 5):
-    # call OpenAIAgentSDK, search Qdrant, process response
-    return {"response": "Processed result"}
