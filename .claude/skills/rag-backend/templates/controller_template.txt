@@ -6,6 +6,7 @@ from src.lib.configs import env_config
 from src.lib.vectordb_connection import get_qdrant_client
 from src.lib.google_embedding import embed_text
 from src.lib.chunker import chunk_markdown
+from agents import Agent,Runner,RunConfig,FunctionTool,function_tool,enable_verbose_stdout_logging,ModelSettings,RunContextWrapper,handoff
 
 async def process_documents(folder_path: str):
     try:
@@ -50,7 +51,7 @@ async def process_documents(folder_path: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-
+@function_tool()
 async def run_query(query: str):
     try:
         client = get_qdrant_client()
@@ -75,3 +76,33 @@ async def run_query(query: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+async def handle_todo_operation(db,agent_config,query):
+    mongoDbContext = DbContext(db=db)
+    # print(agent_config)
+    # enable_verbose_stdout_logging()
+    # # return {query}
+    runConfig = RunConfig(
+        model=agent_config.model(),
+        model_provider= agent_config.client(),
+        # tracing_disabled=True,
+    )
+
+    starting_agent = Agent(
+        name="Todo Agent",
+        instructions=(
+           "Help the user with their todo requests. "
+        "If they ask to see all todos, handoff to the 'Fetch All Todos' agent. "
+        "If they ask to add todos, handoff once to the 'Add Todo' agent. "
+        "Do not make more than one handoff per query."
+        ),
+        # tools=[run_query]
+        
+        
+    )
+
+    result = await Runner.run(
+        starting_agent=starting_agent,input = query,run_config=runConfig
+    )
+    return result.final_output
+    # return "Hello" 

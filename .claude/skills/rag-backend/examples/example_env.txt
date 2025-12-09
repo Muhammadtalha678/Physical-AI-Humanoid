@@ -1,6 +1,8 @@
-QDRANT_URL=http://localhost:6333
-API_KEY=xxxx
-OPENROUTER_API=http://localhost:8000
-MODEL_NAME=text-embedding-004
-COLLECTION_NAME=rag_collection
-BOOK_PATH=docs/book
+qdrant_url=
+qdrant_api_key=
+qdrant_collection_name=
+openrouter_api=
+openrouter_url=
+openrouter_model_name=
+google_api_key=
+embedding_model=
