@@ -208,3 +208,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.11+ (required for FastAPI and async operations) + FastAPI, Qdrant vector database, OpenAI Agent SDK, OpenRouter API, python-dotenv, Pydantic (001-create-retrieval-augmented)
+- Qdrant vector database for document embeddings, file system for .md documents (001-create-retrieval-augmented)
+
+## Recent Changes
+- 001-create-retrieval-augmented: Added Python 3.11+ (required for FastAPI and async operations) + FastAPI, Qdrant vector database, OpenAI Agent SDK, OpenRouter API, python-dotenv, Pydantic
