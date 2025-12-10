@@ -1,0 +1,17 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "RAG Backend System for Physical AI & Humanoid Book - A Retrieval-Augmented Generation system using FastAPI, Qdrant vector database, and OpenAI Agent SDK"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.124.0",
+    "google-generativeai>=0.8.5",
+    "openai>=2.9.0",
+    "openai-agents>=0.6.2",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+    "python-dotenv>=1.2.1",
+    "qdrant-client>=1.16.1",
+    "uvicorn>=0.38.0",
+]
