@@ -1,0 +1,8 @@
+{
+  "label": "Assessment Projects",
+  "position": 8,
+  "link": {
+    "type": "generated-index",
+    "description": "Hands-on projects for ROS 2, Gazebo simulation, Isaac platform, and final capstone."
+  }
+}

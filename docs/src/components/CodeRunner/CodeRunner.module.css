@@ -1,0 +1,173 @@
+.codeRunnerContainer {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  padding: var(--ifm-global-spacing);
+  margin: var(--ifm-global-spacing) 0;
+  background-color: var(--ifm-background-surface-color);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.codeRunnerHeader {
+  margin-bottom: var(--ifm-global-spacing);
+}
+
+.codeRunnerHeader h3 {
+  margin: 0 0 calc(var(--ifm-global-spacing) / 2) 0;
+  color: var(--ifm-color-primary);
+  font-size: 1.25rem;
+}
+
+.description {
+  margin: 0 0 var(--ifm-global-spacing) 0;
+  color: var(--ifm-color-secondary);
+}
+
+.editorSection {
+  margin-bottom: var(--ifm-global-spacing);
+}
+
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: calc(var(--ifm-global-spacing) / 2);
+  flex-wrap: wrap;
+  gap: var(--ifm-global-spacing);
+}
+
+.languageInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.languageBadge {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.editorControls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.runButton {
+  background-color: var(--ifm-color-success);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.runButton:hover {
+  background-color: var(--ifm-color-success-dark);
+}
+
+.resetButton {
+  background-color: var(--ifm-color-secondary);
+}
+
+.resetButton:hover {
+  background-color: var(--ifm-color-secondary-dark);
+}
+
+.clearButton {
+  border-color: var(--ifm-color-secondary);
+  color: var(--ifm-color-secondary);
+}
+
+.clearButton:hover {
+  background-color: var(--ifm-color-emphasis-200);
+}
+
+.codeEditor {
+  position: relative;
+}
+
+.codeTextarea {
+  width: 100%;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: var(--ifm-code-font-size);
+  padding: var(--ifm-global-spacing);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background-color: var(--ifm-pre-background);
+  color: var(--ifm-font-color-base);
+  resize: vertical;
+  min-height: 250px;
+  line-height: 1.5;
+}
+
+.outputSection {
+  margin-top: var(--ifm-global-spacing);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  overflow: hidden;
+}
+
+.outputHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--ifm-color-emphasis-100);
+  padding: 0.5rem var(--ifm-global-spacing);
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.executionTime {
+  font-size: 0.8rem;
+  color: var(--ifm-color-secondary);
+  background-color: var(--ifm-color-emphasis-200);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--ifm-global-radius);
+}
+
+.outputContent {
+  padding: var(--ifm-global-spacing);
+  background-color: var(--ifm-pre-background);
+  color: var(--ifm-font-color-base);
+  max-height: 300px;
+  overflow: auto;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: var(--ifm-code-font-size);
+}
+
+.outputContent pre {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.spinner {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 2px solid var(--ifm-color-emphasis-300);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .editorHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .editorControls {
+    justify-content: center;
+  }
+
+  .outputHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

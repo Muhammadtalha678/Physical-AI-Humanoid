@@ -1,0 +1,81 @@
+.trackerContainer {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  background-color: #f9f9f9;
+}
+
+.trackerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.trackerHeader h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.progressInfo {
+  font-weight: bold;
+  color: #3498db;
+}
+
+.progressBar {
+  width: 100%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3498db, #2ecc71);
+  transition: width 0.3s ease;
+}
+
+.trackerActions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.completeBtn, .incompleteBtn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.completeBtn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.completeBtn:hover {
+  background-color: #27ae60;
+}
+
+.incompleteBtn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.incompleteBtn:hover {
+  background-color: #c0392b;
+}
+
+.status {
+  font-weight: bold;
+  color: #7f8c8d;
+  text-align: center;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #ecf0f1;
+}

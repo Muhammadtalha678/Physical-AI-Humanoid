@@ -1,0 +1,133 @@
+.assessmentContainer {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  padding: var(--ifm-global-spacing);
+  margin: var(--ifm-global-spacing) 0;
+  background-color: var(--ifm-background-surface-color);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.assessmentHeader {
+  margin-bottom: var(--ifm-global-spacing);
+}
+
+.question {
+  margin: 0 0 var(--ifm-global-spacing) 0;
+  color: var(--ifm-heading-color);
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.optionsContainer {
+  margin-bottom: var(--ifm-global-spacing);
+}
+
+.option {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all var(--ifm-transition-fast) ease;
+}
+
+.option:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.optionSelected {
+  border-color: var(--ifm-color-primary);
+  background-color: var(--ifm-color-emphasis-100);
+}
+
+.optionCorrect {
+  border-color: var(--ifm-color-success);
+  background-color: var(--ifm-color-success-contrast-background);
+}
+
+.optionIncorrect {
+  border-color: var(--ifm-color-danger);
+  background-color: var(--ifm-color-danger-contrast-background);
+}
+
+.optionInput {
+  display: none;
+}
+
+.optionLabel {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  border-radius: calc(var(--ifm-global-radius) - 1px);
+  transition: color var(--ifm-transition-fast) ease;
+}
+
+.submitSection {
+  text-align: center;
+  margin-top: var(--ifm-global-spacing);
+}
+
+.submitButton {
+  background-color: var(--ifm-color-primary);
+}
+
+.submitButton:hover {
+  background-color: var(--ifm-color-primary-dark);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.resultSection {
+  margin-top: var(--ifm-global-spacing);
+}
+
+.resultMessage {
+  margin-bottom: var(--ifm-global-spacing);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resultContent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resultIcon {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.resultText {
+  font-weight: 500;
+}
+
+.explanation {
+  margin-bottom: var(--ifm-global-spacing);
+}
+
+.resetSection {
+  text-align: center;
+}
+
+.resetButton {
+  background-color: var(--ifm-color-secondary);
+}
+
+.resetButton:hover {
+  background-color: var(--ifm-color-secondary-dark);
+}
+
+@media (max-width: 768px) {
+  .assessmentContainer {
+    padding: calc(var(--ifm-global-spacing) * 0.75);
+  }
+
+  .question {
+    font-size: 1rem;
+  }
+}

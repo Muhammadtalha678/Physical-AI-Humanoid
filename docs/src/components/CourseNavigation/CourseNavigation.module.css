@@ -1,0 +1,103 @@
+.courseNavigation {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  padding: var(--ifm-global-spacing);
+  margin: var(--ifm-global-spacing) 0;
+  background-color: var(--ifm-background-surface-color);
+}
+
+.navigationHeader {
+  margin-bottom: var(--ifm-global-spacing);
+  padding-bottom: calc(var(--ifm-global-spacing) / 2);
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.navigationTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+}
+
+.weekList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.weekItem {
+  margin: 0;
+  padding: 0;
+}
+
+.weekItem:not(:last-child) {
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.weekItemActive {
+  background-color: var(--ifm-color-emphasis-100);
+}
+
+.weekLink {
+  display: flex;
+  align-items: center;
+  padding: calc(var(--ifm-global-spacing) * 0.5) var(--ifm-global-spacing);
+  text-decoration: none;
+  color: var(--ifm-font-color-base);
+  transition: all var(--ifm-transition-fast) ease;
+}
+
+.weekLink:hover {
+  background-color: var(--ifm-color-emphasis-200);
+  text-decoration: none;
+}
+
+.weekLinkActive {
+  background-color: var(--ifm-color-primary-lightest);
+  color: var(--ifm-color-primary-contrast-foreground);
+  font-weight: 500;
+}
+
+.weekId {
+  display: inline-block;
+  background-color: var(--ifm-color-emphasis-300);
+  color: var(--ifm-color-emphasis-800);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  margin-right: var(--ifm-global-spacing);
+  min-width: 70px;
+  text-align: center;
+}
+
+.weekTitle {
+  flex: 1;
+}
+
+.completionBadge {
+  color: var(--ifm-color-success);
+  font-weight: bold;
+  margin-left: var(--ifm-global-spacing);
+}
+
+.weekItemCompleted .weekLink {
+  opacity: 0.8;
+}
+
+.weekItemCompleted .weekId {
+  background-color: var(--ifm-color-success);
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .weekLink {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .weekId {
+    margin-right: 0;
+  }
+}

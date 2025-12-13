@@ -1,0 +1,290 @@
+# API Contract: Textbook Interactive Services
+
+## Overview
+This document defines the API contracts for interactive services that may be integrated with the Physical AI & Humanoid Robotics textbook. These services enhance the learning experience with features like code execution, assessment submission, and personalized content delivery.
+
+## Base URL
+```
+https://api.physical-ai-textbook.com/v1
+```
+
+## Authentication
+All endpoints require authentication using Bearer tokens, except for public content endpoints.
+
+## Content Service
+
+### Get Chapter Content
+```
+GET /chapters/{chapterId}
+```
+
+**Description:** Retrieve content for a specific chapter with all its sections.
+
+**Path Parameters:**
+- `chapterId` (string): Unique identifier for the chapter (e.g., "week-01-02-introduction")
+
+**Headers:**
+- `Authorization: Bearer {token}` (optional for public content)
+
+**Response (200 OK):**
+```json
+{
+  "id": "week-01-02-introduction",
+  "title": "Introduction to Physical AI",
+  "weekRange": "1-2",
+  "description": "Foundations of Physical AI and embodied intelligence",
+  "learningObjectives": [
+    "Understand the difference between digital AI and physical AI",
+    "Identify key components of humanoid robotics",
+    "Explain sensor systems used in robotics"
+  ],
+  "prerequisites": [],
+  "contentSections": [
+    {
+      "id": "foundations-physical-ai",
+      "title": "Foundations of Physical AI",
+      "type": "lesson",
+      "content": "# Foundations of Physical AI\n\nPhysical AI represents...",
+      "order": 1,
+      "interactiveElements": [
+        {
+          "type": "code-playground",
+          "id": "example-1",
+          "language": "python",
+          "initialCode": "print('Hello, Physical AI!')"
+        }
+      ]
+    }
+  ],
+  "assessments": [],
+  "resources": [],
+  "duration": 8,
+  "difficulty": "intermediate",
+  "nextChapterId": "week-03-05-ros2"
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Chapter does not exist
+- `401 Unauthorized`: Invalid or missing authentication token
+
+## Assessment Service
+
+### Submit Assessment
+```
+POST /assessments/{assessmentId}/submissions
+```
+
+**Description:** Submit an assessment project for evaluation.
+
+**Path Parameters:**
+- `assessmentId` (string): Unique identifier for the assessment
+
+**Headers:**
+- `Authorization: Bearer {token}`
+
+**Request Body:**
+```json
+{
+  "userId": "user-123",
+  "files": [
+    {
+      "name": "solution.py",
+      "content": "import rclpy...",
+      "encoding": "utf-8"
+    }
+  ],
+  "metadata": {
+    "platformSetup": "Digital Twin",
+    "submissionNotes": "Additional notes from the learner"
+  }
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "submissionId": "sub-456",
+  "assessmentId": "ros2-package-project",
+  "userId": "user-123",
+  "status": "submitted",
+  "submittedAt": "2025-12-11T10:30:00Z",
+  "evaluation": {
+    "status": "pending",
+    "estimatedCompletion": "2025-12-11T12:30:00Z"
+  }
+}
+```
+
+### Get Assessment Evaluation
+```
+GET /assessments/{assessmentId}/submissions/{submissionId}
+```
+
+**Description:** Retrieve evaluation results for a submitted assessment.
+
+**Response (200 OK):**
+```json
+{
+  "submissionId": "sub-456",
+  "assessmentId": "ros2-package-project",
+  "userId": "user-123",
+  "status": "evaluated",
+  "evaluatedAt": "2025-12-11T11:45:00Z",
+  "score": 85,
+  "maxScore": 100,
+  "feedback": "Good implementation of ROS 2 nodes. Consider adding more error handling.",
+  "evaluationCriteria": [
+    {
+      "criterion": "Code Quality",
+      "score": 25,
+      "maxScore": 30,
+      "feedback": "Well-structured code but could use more comments"
+    },
+    {
+      "criterion": "Functionality",
+      "score": 30,
+      "maxScore": 30,
+      "feedback": "All required functions work correctly"
+    }
+  ]
+}
+```
+
+## Code Execution Service
+
+### Execute Code
+```
+POST /code/execute
+```
+
+**Description:** Execute code snippets in a safe environment for interactive learning.
+
+**Headers:**
+- `Authorization: Bearer {token}`
+
+**Request Body:**
+```json
+{
+  "code": "import rclpy\nprint('Hello from ROS 2')",
+  "language": "python",
+  "timeout": 10000,
+  "dependencies": ["rclpy"]
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "executionId": "exec-789",
+  "output": "Hello from ROS 2\n",
+  "error": null,
+  "executionTime": 120,
+  "status": "success"
+}
+```
+
+## Progress Tracking Service
+
+### Get User Progress
+```
+GET /users/{userId}/progress
+```
+
+**Description:** Retrieve the user's progress through the textbook.
+
+**Response (200 OK):**
+```json
+{
+  "userId": "user-123",
+  "progress": [
+    {
+      "chapterId": "week-01-02-introduction",
+      "status": "completed",
+      "completionDate": "2025-12-10T15:30:00Z",
+      "timeSpent": 480,
+      "assessmentScores": [
+        {
+          "assessmentId": "intro-quiz",
+          "score": 90,
+          "maxScore": 100
+        }
+      ]
+    },
+    {
+      "chapterId": "week-03-05-ros2",
+      "status": "in-progress",
+      "timeSpent": 240,
+      "currentSectionId": "nodes-topics-services-actions"
+    }
+  ],
+  "overallCompletion": 15.5
+}
+```
+
+### Update Chapter Progress
+```
+PUT /users/{userId}/progress/{chapterId}
+```
+
+**Description:** Update the user's progress for a specific chapter.
+
+**Request Body:**
+```json
+{
+  "status": "completed",
+  "timeSpent": 480,
+  "completedSections": ["foundations-physical-ai", "from-digital-ai"]
+}
+```
+
+## Search Service
+
+### Search Content
+```
+GET /search
+```
+
+**Description:** Search across all textbook content.
+
+**Query Parameters:**
+- `q` (string): Search query
+- `limit` (number, optional): Number of results to return (default: 10)
+- `offset` (number, optional): Number of results to skip (default: 0)
+
+**Response (200 OK):**
+```json
+{
+  "query": "ROS 2 architecture",
+  "totalResults": 25,
+  "results": [
+    {
+      "id": "ros2-architecture-concepts",
+      "title": "ROS 2 Architecture Concepts",
+      "chapterId": "week-03-05-ros2",
+      "chapterTitle": "ROS 2 Fundamentals",
+      "contentPreview": "ROS 2 (Robot Operating System 2) is a flexible framework...",
+      "relevance": 0.95
+    }
+  ]
+}
+```
+
+## Error Response Format
+All error responses follow this format:
+```json
+{
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable error message",
+    "details": "Additional error details if applicable"
+  }
+}
+```
+
+## Common Error Codes
+- `RESOURCE_NOT_FOUND`: Requested resource does not exist
+- `UNAUTHORIZED`: Authentication required or invalid
+- `VALIDATION_ERROR`: Request data does not meet requirements
+- `RATE_LIMIT_EXCEEDED`: Too many requests from the same client
+- `INTERNAL_ERROR`: Server-side error occurred

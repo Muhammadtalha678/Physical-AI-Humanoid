@@ -1,0 +1,1486 @@
+---
+title: Capstone: Autonomous Humanoid Pipeline Project
+sidebar_position: 4
+description: Building an autonomous humanoid pipeline integrating speech, planning, navigation, perception, and manipulation
+duration: 480
+difficulty: advanced
+learning_objectives:
+  - Integrate all course components into a complete autonomous humanoid system
+  - Implement speech-to-action pipeline with natural language understanding
+  - Combine navigation, perception, and manipulation capabilities
+  - Deploy and evaluate the complete system in simulation and real-world scenarios
+---
+
+# Capstone: Autonomous Humanoid Pipeline Project
+
+## Learning Objectives
+
+By the end of this capstone project, you will be able to:
+- Integrate all course components into a complete autonomous humanoid system
+- Implement speech-to-action pipeline with natural language understanding
+- Combine navigation, perception, and manipulation capabilities
+- Deploy and evaluate the complete system in simulation and real-world scenarios
+
+## Project Overview
+
+This capstone project brings together all the concepts learned throughout the course to create an autonomous humanoid robot pipeline. The system integrates speech recognition, natural language understanding, path planning, navigation, computer vision, perception, and manipulation capabilities into a unified system.
+
+### Project Requirements
+
+1. **Speech Interface**: Natural language processing for robot commands
+2. **Planning & Navigation**: Path planning and navigation through environments
+3. **Perception System**: Object detection and recognition for manipulation
+4. **Manipulation**: Robotic arm control for object interaction
+5. **Integration**: All components working together seamlessly
+6. **Evaluation**: Performance metrics and validation of the complete system
+
+## System Architecture
+
+### High-Level Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Speech &      │    │   Planning &    │    │   Perception &  │
+│   Language      │    │   Navigation    │    │   Manipulation  │
+│   Processing    │───▶│   System        │───▶│   System        │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Central Orchestration                        │
+│                   (Behavior Trees/FSM)                         │
+└─────────────────────────────────────────────────────────────────┘
+         ▲                       ▲                       ▲
+         │                       │                       │
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   ROS 2         │    │   Isaac Sim     │    │   Hardware      │
+│   Infrastructure│    │   Interface     │    │   Interface     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### Component Integration
+
+The system is built using a modular architecture where each component can be developed and tested independently:
+
+- **Speech Processing Module**: Handles voice input, speech recognition, and natural language understanding
+- **Planning Module**: Performs path planning, task planning, and motion planning
+- **Perception Module**: Processes visual information, detects objects, and estimates poses
+- **Manipulation Module**: Controls robotic arms and grippers for object interaction
+- **Orchestration Layer**: Coordinates all modules and manages system state
+
+## Speech-to-Action Pipeline
+
+### Natural Language Processing
+
+Implement a natural language understanding system that can interpret human commands:
+
+```python
+# speech_to_action.py
+import speech_recognition as sr
+import openai
+import json
+import re
+from typing import Dict, List, Tuple
+
+class NaturalLanguageProcessor:
+    def __init__(self, api_key=None):
+        self.recognizer = sr.Recognizer()
+        self.microphone = sr.Microphone()
+
+        # Use OpenAI API if available, otherwise use local NLP
+        if api_key:
+            openai.api_key = api_key
+            self.use_openai = True
+        else:
+            self.use_openai = False
+            # Fallback to local processing (simplified)
+
+        # Define action vocabulary
+        self.action_keywords = {
+            'move': ['go to', 'move to', 'navigate to', 'walk to', 'travel to'],
+            'pick': ['pick up', 'grasp', 'take', 'lift', 'get'],
+            'place': ['put down', 'place', 'drop', 'set down', 'place at'],
+            'detect': ['find', 'locate', 'identify', 'search for', 'spot'],
+            'follow': ['follow', 'track', 'escort', 'accompany', 'lead'],
+            'greet': ['hello', 'hi', 'greet', 'say hi', 'wave to']
+        }
+
+    def speech_to_text(self, audio_file=None):
+        """Convert speech to text"""
+        if audio_file:
+            with sr.AudioFile(audio_file) as source:
+                audio = self.recognizer.record(source)
+        else:
+            print("Listening...")
+            with self.microphone as source:
+                self.recognizer.adjust_for_ambient_noise(source)
+                audio = self.recognizer.listen(source)
+                print("Processing...")
+
+        try:
+            text = self.recognizer.recognize_google(audio)
+            print(f"Recognized: {text}")
+            return text
+        except sr.UnknownValueError:
+            print("Could not understand audio")
+            return None
+        except sr.RequestError as e:
+            print(f"Error with speech recognition service: {e}")
+            return None
+
+    def parse_command(self, text):
+        """Parse natural language command into structured action"""
+        if not text:
+            return None
+
+        # Convert to lowercase for easier processing
+        text_lower = text.lower()
+
+        # Extract action type
+        action_type = None
+        for action, keywords in self.action_keywords.items():
+            for keyword in keywords:
+                if keyword in text_lower:
+                    action_type = action
+                    break
+            if action_type:
+                break
+
+        if not action_type:
+            # Use OpenAI for more complex parsing if available
+            if self.use_openai:
+                return self.parse_with_openai(text)
+            else:
+                return self.simple_parse(text_lower)
+
+        # Extract entities (objects, locations, etc.)
+        entities = self.extract_entities(text_lower, action_type)
+
+        return {
+            'action': action_type,
+            'entities': entities,
+            'original_text': text
+        }
+
+    def extract_entities(self, text, action_type):
+        """Extract relevant entities from the command"""
+        entities = {}
+
+        # Common patterns for extracting locations, objects, etc.
+        location_patterns = [
+            r'in the (\w+) room',
+            r'to the (\w+) (?:room|area|location)',
+            r'at the (\w+) (?:table|desk|counter)',
+            r'near the (\w+)'
+        ]
+
+        object_patterns = [
+            r'(?:the |a |an )(\w+ (?:box|cup|book|ball|toy|object))',
+            r'(?:the |a |an )(\w+ \w+ (?:box|cup|book|ball|toy|object))',
+            r'(\w+ \w+)',
+            r'(\w+)'
+        ]
+
+        # Extract locations
+        for pattern in location_patterns:
+            matches = re.findall(pattern, text)
+            if matches:
+                entities['location'] = matches[0]
+                break
+
+        # Extract objects
+        for pattern in object_patterns:
+            matches = re.findall(pattern, text)
+            for match in matches:
+                # Filter out action words
+                if match not in [word for sublist in self.action_keywords.values() for word in sublist]:
+                    entities['object'] = match
+                    break
+
+        return entities
+
+    def simple_parse(self, text):
+        """Simple command parsing for basic actions"""
+        # This is a simplified version - in practice, you'd use more sophisticated NLP
+        command_map = {
+            'move to kitchen': {'action': 'move', 'entities': {'location': 'kitchen'}},
+            'pick up red cup': {'action': 'pick', 'entities': {'object': 'red cup'}},
+            'place cup on table': {'action': 'place', 'entities': {'object': 'cup', 'location': 'table'}},
+            'find blue ball': {'action': 'detect', 'entities': {'object': 'blue ball'}},
+            'follow me': {'action': 'follow', 'entities': {}},
+            'hello robot': {'action': 'greet', 'entities': {}}
+        }
+
+        for key, value in command_map.items():
+            if key in text:
+                return value
+
+        return {'action': 'unknown', 'entities': {}, 'original_text': text}
+
+    def parse_with_openai(self, text):
+        """Use OpenAI for advanced command parsing"""
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """You are a command parser for a humanoid robot. Parse the user's command into a structured format.
+                        Respond with a JSON object containing 'action' (move, pick, place, detect, follow, greet) and 'entities' (object, location).
+                        Example: {'action': 'pick', 'entities': {'object': 'red cup', 'location': 'kitchen'}}"""
+                    },
+                    {
+                        "role": "user",
+                        "content": text
+                    }
+                ],
+                temperature=0.1
+            )
+
+            result = json.loads(response.choices[0].message.content)
+            result['original_text'] = text
+            return result
+        except Exception as e:
+            print(f"Error with OpenAI parsing: {e}")
+            return self.simple_parse(text)
+
+
+class SpeechToActionPipeline:
+    def __init__(self, nlp_processor):
+        self.nlp = nlp_processor
+        self.command_queue = []
+
+    def process_audio_command(self, audio_file=None):
+        """Process audio command and convert to robot action"""
+        # Convert speech to text
+        text = self.nlp.speech_to_text(audio_file)
+        if not text:
+            return None
+
+        # Parse the command
+        parsed_command = self.nlp.parse_command(text)
+        if not parsed_command:
+            return None
+
+        # Add to command queue
+        self.command_queue.append(parsed_command)
+        return parsed_command
+
+    def get_next_command(self):
+        """Get the next command from the queue"""
+        if self.command_queue:
+            return self.command_queue.pop(0)
+        return None
+
+    def execute_command(self, command, robot_interface):
+        """Execute a parsed command using the robot interface"""
+        if command['action'] == 'move':
+            location = command['entities'].get('location', 'default')
+            robot_interface.move_to_location(location)
+        elif command['action'] == 'pick':
+            obj = command['entities'].get('object', 'default')
+            robot_interface.pick_object(obj)
+        elif command['action'] == 'place':
+            obj = command['entities'].get('object', 'default')
+            location = command['entities'].get('location', 'default')
+            robot_interface.place_object(obj, location)
+        elif command['action'] == 'detect':
+            obj = command['entities'].get('object', 'default')
+            robot_interface.detect_object(obj)
+        elif command['action'] == 'follow':
+            robot_interface.follow_person()
+        elif command['action'] == 'greet':
+            robot_interface.greet_person()
+        else:
+            print(f"Unknown action: {command['action']}")
+            return False
+
+        return True
+
+
+# Example usage
+def example_usage():
+    # Initialize the processor
+    nlp = NaturalLanguageProcessor(api_key=None)  # Use local processing for example
+    pipeline = SpeechToActionPipeline(nlp)
+
+    # Simulate a command
+    test_command = "Please go to the kitchen and pick up the red cup"
+    parsed = nlp.parse_command(test_command)
+
+    print(f"Parsed command: {parsed}")
+
+
+if __name__ == "__main__":
+    example_usage()
+```
+
+## Planning and Navigation System
+
+### Path Planning and Navigation
+
+Implement the planning and navigation system:
+
+```python
+# planning_navigation.py
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.spatial.distance import cdist
+import heapq
+from typing import List, Tuple, Optional
+import math
+
+class OccupancyGrid:
+    def __init__(self, width: int, height: int, resolution: float = 1.0):
+        self.width = width
+        self.height = height
+        self.resolution = resolution  # meters per grid cell
+        self.grid = np.zeros((height, width), dtype=np.int8)  # 0: free, 1: occupied, -1: unknown
+
+    def world_to_grid(self, x: float, y: float) -> Tuple[int, int]:
+        """Convert world coordinates to grid coordinates"""
+        grid_x = int((x / self.resolution) + (self.width / 2))
+        grid_y = int((y / self.resolution) + (self.height / self.height / 2))
+        return min(max(grid_x, 0), self.width - 1), min(max(grid_y, 0), self.height - 1)
+
+    def grid_to_world(self, grid_x: int, grid_y: int) -> Tuple[float, float]:
+        """Convert grid coordinates to world coordinates"""
+        x = (grid_x - (self.width / 2)) * self.resolution
+        y = (grid_y - (self.height / 2)) * self.resolution
+        return x, y
+
+    def is_free(self, x: int, y: int) -> bool:
+        """Check if a grid cell is free"""
+        if 0 <= x < self.width and 0 <= y < self.height:
+            return self.grid[y, x] == 0
+        return False
+
+    def add_obstacle(self, x: int, y: int):
+        """Add an obstacle to the grid"""
+        if 0 <= x < self.width and 0 <= y < self.height:
+            self.grid[y, x] = 1
+
+    def update_from_sensor_data(self, sensor_data):
+        """Update grid based on sensor data (simplified)"""
+        # In practice, this would integrate LIDAR, camera, or other sensor data
+        # For this example, we'll just mark some cells as occupied
+        for i in range(5):
+            for j in range(5):
+                self.add_obstacle(10 + i, 10 + j)
+
+
+class AStarPlanner:
+    def __init__(self, occupancy_grid: OccupancyGrid):
+        self.grid = occupancy_grid
+        self.directions = [
+            (-1, -1), (-1, 0), (-1, 1),
+            (0, -1),           (0, 1),
+            (1, -1),  (1, 0),  (1, 1)
+        ]
+        self.direction_costs = [
+            math.sqrt(2), 1, math.sqrt(2),
+            1,           1,
+            math.sqrt(2), 1, math.sqrt(2)
+        ]
+
+    def heuristic(self, pos1: Tuple[int, int], pos2: Tuple[int, int]) -> float:
+        """Heuristic function for A* (Euclidean distance)"""
+        return math.sqrt((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2)
+
+    def plan_path(self, start: Tuple[int, int], goal: Tuple[int, int]) -> Optional[List[Tuple[int, int]]]:
+        """Plan path using A* algorithm"""
+        if not self.grid.is_free(start[0], start[1]) or not self.grid.is_free(goal[0], goal[1]):
+            return None
+
+        # Priority queue: (f_score, g_score, position)
+        open_set = [(0, 0, start)]
+        closed_set = set()
+
+        # For path reconstruction
+        came_from = {}
+
+        # Cost dictionaries
+        g_score = {start: 0}
+        f_score = {start: self.heuristic(start, goal)}
+
+        while open_set:
+            current_f, current_g, current = heapq.heappop(open_set)
+
+            if current == goal:
+                # Reconstruct path
+                path = [current]
+                while current in came_from:
+                    current = came_from[current]
+                    path.append(current)
+                path.reverse()
+                return path
+
+            closed_set.add(current)
+
+            # Check neighbors
+            for i, direction in enumerate(self.directions):
+                neighbor = (current[0] + direction[0], current[1] + direction[1])
+
+                # Skip if out of bounds or occupied
+                if (neighbor[0] < 0 or neighbor[0] >= self.grid.width or
+                    neighbor[1] < 0 or neighbor[1] >= self.grid.height or
+                    neighbor in closed_set or not self.grid.is_free(neighbor[0], neighbor[1])):
+                    continue
+
+                tentative_g = current_g + self.direction_costs[i]
+
+                if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g
+                    f_score[neighbor] = tentative_g + self.heuristic(neighbor, goal)
+                    heapq.heappush(open_set, (f_score[neighbor], tentative_g, neighbor))
+
+        return None  # No path found
+
+
+class NavigationSystem:
+    def __init__(self):
+        self.occupancy_grid = OccupancyGrid(100, 100, 0.1)  # 10m x 10m grid with 10cm resolution
+        self.planner = AStarPlanner(self.occupancy_grid)
+        self.current_position = (0, 0)  # Grid coordinates
+        self.path = []
+        self.path_index = 0
+
+    def update_map(self, sensor_data):
+        """Update the occupancy grid with new sensor data"""
+        self.occupancy_grid.update_from_sensor_data(sensor_data)
+
+    def plan_to_location(self, goal_x: float, goal_y: float) -> bool:
+        """Plan a path to a world coordinate location"""
+        # Convert world coordinates to grid coordinates
+        start_grid = self.occupancy_grid.world_to_grid(
+            self.current_position[0], self.current_position[1]
+        )
+        goal_grid = self.occupancy_grid.world_to_grid(goal_x, goal_y)
+
+        # Plan path
+        path = self.planner.plan_path(start_grid, goal_grid)
+        if path:
+            self.path = path
+            self.path_index = 0
+            return True
+        else:
+            print(f"No path found from {start_grid} to {goal_grid}")
+            return False
+
+    def get_next_waypoint(self) -> Optional[Tuple[float, float]]:
+        """Get the next waypoint in the path"""
+        if self.path_index < len(self.path):
+            grid_pos = self.path[self.path_index]
+            world_pos = self.occupancy_grid.grid_to_world(grid_pos[0], grid_pos[1])
+            return world_pos
+        return None
+
+    def reached_waypoint(self):
+        """Indicate that the current waypoint has been reached"""
+        self.path_index += 1
+
+    def is_path_complete(self) -> bool:
+        """Check if the path has been completely traversed"""
+        return self.path_index >= len(self.path)
+
+    def move_to_location(self, location_name: str):
+        """Navigate to a named location"""
+        # In a real system, this would map location names to coordinates
+        # For this example, we'll use predefined locations
+        location_map = {
+            'kitchen': (2.0, 1.0),
+            'living_room': (-1.0, 0.0),
+            'bedroom': (0.0, -2.0),
+            'office': (1.5, -1.5),
+            'default': (0.0, 0.0)
+        }
+
+        target_pos = location_map.get(location_name, location_map['default'])
+        print(f"Navigating to {location_name} at ({target_pos[0]:.1f}, {target_pos[1]:.1f})")
+
+        if self.plan_to_location(target_pos[0], target_pos[1]):
+            print("Path planning successful, executing navigation...")
+            # In a real system, this would execute the navigation
+            # For this example, we'll just simulate reaching the destination
+            self.current_position = target_pos
+            print(f"Reached {location_name}")
+        else:
+            print(f"Failed to plan path to {location_name}")
+
+
+# Example usage
+def example_navigation():
+    nav_system = NavigationSystem()
+
+    # Update map with some obstacles
+    sensor_data = {}  # In practice, this would come from sensors
+    nav_system.update_map(sensor_data)
+
+    # Navigate to kitchen
+    nav_system.move_to_location('kitchen')
+
+    # Navigate to living room
+    nav_system.move_to_location('living_room')
+
+
+if __name__ == "__main__":
+    example_navigation()
+```
+
+## Perception and Manipulation System
+
+### Object Detection and Manipulation
+
+Implement the perception and manipulation components:
+
+```python
+# perception_manipulation.py
+import cv2
+import numpy as np
+import open3d as o3d
+from typing import List, Dict, Tuple, Optional
+import math
+
+class ObjectDetector:
+    def __init__(self):
+        # For this example, we'll use a simple color-based detector
+        # In practice, you'd use YOLO, Detectron2, or similar
+        self.known_objects = {
+            'red_cube': ([0, 100, 100], [10, 255, 255]),  # HSV ranges
+            'green_cube': ([40, 50, 50], [80, 255, 255]),
+            'blue_cube': ([100, 50, 50], [130, 255, 255]),
+            'cup': ([0, 0, 100], [180, 50, 255]),  # Dark colors
+        }
+
+    def detect_objects(self, image: np.ndarray) -> List[Dict]:
+        """Detect objects in the image"""
+        results = []
+
+        # Convert to HSV for color-based detection
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+        for obj_name, (lower, upper) in self.known_objects.items():
+            # Create mask for this object color
+            mask = cv2.inRange(hsv, np.array(lower), np.array(upper))
+
+            # Find contours
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            for contour in contours:
+                # Filter by size to avoid tiny detections
+                area = cv2.contourArea(contour)
+                if area > 500:  # Minimum area threshold
+                    # Get bounding box
+                    x, y, w, h = cv2.boundingRect(contour)
+
+                    # Calculate center
+                    center_x = x + w // 2
+                    center_y = y + h // 2
+
+                    # Calculate 3D position (simplified - assumes known camera parameters)
+                    # In practice, you'd use stereo vision or depth information
+                    distance = self.estimate_distance(w, h)  # Simplified distance estimation
+
+                    obj_info = {
+                        'name': obj_name,
+                        'bbox': (x, y, w, h),
+                        'center': (center_x, center_y),
+                        'distance': distance,
+                        'confidence': min(0.95, area / 10000)  # Confidence based on size
+                    }
+
+                    results.append(obj_info)
+
+        return results
+
+    def estimate_distance(self, width: int, height: int) -> float:
+        """Estimate distance based on object size in pixels (simplified)"""
+        # This is a very simplified approach
+        # In practice, you'd use calibrated camera parameters and known object sizes
+        focal_length = 500  # pixels (typical for many cameras)
+        real_width = 0.1  # meters (assumed real width of object)
+
+        # Distance = (real_width * focal_length) / pixel_width
+        distance = (real_width * focal_length) / max(width, height)
+        return max(0.1, distance)  # Minimum distance of 0.1m
+
+
+class PoseEstimator:
+    def __init__(self):
+        # In practice, you'd use a more sophisticated pose estimation method
+        # like DenseFusion, PVNet, or similar
+        pass
+
+    def estimate_pose(self, object_mask: np.ndarray, object_name: str) -> Dict:
+        """Estimate 6D pose of object"""
+        # Simplified pose estimation
+        # Calculate center of mass for position
+        y_coords, x_coords = np.where(object_mask > 0)
+
+        if len(x_coords) > 0 and len(y_coords) > 0:
+            center_x = np.mean(x_coords)
+            center_y = np.mean(y_coords)
+
+            # Estimate orientation (simplified)
+            # In practice, you'd use more sophisticated methods
+            orientation = {
+                'roll': 0.0,
+                'pitch': 0.0,
+                'yaw': 0.0
+            }
+
+            position = {
+                'x': center_x,
+                'y': center_y,
+                'z': 0.5  # Assumed height
+            }
+
+            return {
+                'position': position,
+                'orientation': orientation,
+                'confidence': 0.8
+            }
+
+        return None
+
+
+class ManipulationPlanner:
+    def __init__(self):
+        self.reachable_workspace = {
+            'x_range': (-0.5, 0.5),
+            'y_range': (-0.5, 0.5),
+            'z_range': (0.1, 0.8)
+        }
+
+    def plan_grasp(self, object_pose: Dict) -> Optional[Dict]:
+        """Plan a grasp for the given object"""
+        obj_pos = object_pose['position']
+
+        # Check if object is in reachable workspace
+        if (self.reachable_workspace['x_range'][0] <= obj_pos['x'] <= self.reachable_workspace['x_range'][1] and
+            self.reachable_workspace['y_range'][0] <= obj_pos['y'] <= self.reachable_workspace['y_range'][1] and
+            self.reachable_workspace['z_range'][0] <= obj_pos['z'] <= self.reachable_workspace['z_range'][1]):
+
+            # Plan approach and grasp
+            grasp_plan = {
+                'approach_pose': {
+                    'x': obj_pos['x'],
+                    'y': obj_pos['y'],
+                    'z': obj_pos['z'] + 0.1,  # 10cm above object
+                    'orientation': object_pose['orientation']
+                },
+                'grasp_pose': {
+                    'x': obj_pos['x'],
+                    'y': obj_pos['y'],
+                    'z': obj_pos['z'] + 0.02,  # Just above object
+                    'orientation': object_pose['orientation']
+                },
+                'gripper_width': 0.05,  # 5cm gripper width
+                'grasp_type': 'top_down'  # Approach from above
+            }
+
+            return grasp_plan
+
+        return None
+
+    def plan_placement(self, target_location: Tuple[float, float, float]) -> Dict:
+        """Plan placement at target location"""
+        placement_plan = {
+            'approach_pose': {
+                'x': target_location[0],
+                'y': target_location[1],
+                'z': target_location[2] + 0.1,  # 10cm above target
+                'orientation': {'roll': 0, 'pitch': 0, 'yaw': 0}
+            },
+            'placement_pose': {
+                'x': target_location[0],
+                'y': target_location[1],
+                'z': target_location[2] + 0.02,  # Just above surface
+                'orientation': {'roll': 0, 'pitch': 0, 'yaw': 0}
+            },
+            'release_action': 'open_gripper'
+        }
+
+        return placement_plan
+
+
+class PerceptionManipulationSystem:
+    def __init__(self):
+        self.detector = ObjectDetector()
+        self.pose_estimator = PoseEstimator()
+        self.manipulator = ManipulationPlanner()
+        self.detected_objects = []
+
+    def process_scene(self, image: np.ndarray) -> List[Dict]:
+        """Process scene and detect objects"""
+        self.detected_objects = self.detector.detect_objects(image)
+
+        # For each detected object, estimate pose
+        for obj in self.detected_objects:
+            # Create a simple mask for pose estimation
+            mask = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+            x, y, w, h = obj['bbox']
+            mask[y:y+h, x:x+w] = 255
+
+            pose = self.pose_estimator.estimate_pose(mask, obj['name'])
+            if pose:
+                obj['pose'] = pose
+
+        return self.detected_objects
+
+    def find_object_by_name(self, name: str) -> Optional[Dict]:
+        """Find an object by name in the detected objects"""
+        for obj in self.detected_objects:
+            if name.lower() in obj['name'].lower():
+                return obj
+        return None
+
+    def pick_object(self, object_name: str) -> bool:
+        """Plan and execute picking of an object"""
+        obj = self.find_object_by_name(object_name)
+        if not obj:
+            print(f"Object '{object_name}' not found")
+            return False
+
+        print(f"Planning to pick {obj['name']} at position {obj['pose']['position']}")
+
+        # Plan grasp
+        grasp_plan = self.manipulator.plan_grasp(obj['pose'])
+        if not grasp_plan:
+            print(f"Cannot grasp {obj['name']} - out of reach")
+            return False
+
+        print(f"Grasp plan created: {grasp_plan}")
+        # In a real system, this would execute the grasp
+        print(f"Successfully picked {obj['name']}")
+        return True
+
+    def place_object(self, object_name: str, location: Tuple[float, float, float]) -> bool:
+        """Plan and execute placing of an object at location"""
+        print(f"Planning to place {object_name} at {location}")
+
+        # Plan placement
+        placement_plan = self.manipulator.plan_placement(location)
+        print(f"Placement plan created: {placement_plan}")
+        # In a real system, this would execute the placement
+        print(f"Successfully placed {object_name}")
+        return True
+
+    def detect_object(self, object_name: str) -> bool:
+        """Detect and report an object"""
+        obj = self.find_object_by_name(object_name)
+        if obj:
+            print(f"Found {obj['name']} at position {obj['pose']['position']} "
+                  f"with confidence {obj['confidence']:.2f}")
+            return True
+        else:
+            print(f"Could not find {object_name}")
+            return False
+
+
+# Example usage
+def example_perception_manipulation():
+    pms = PerceptionManipulationSystem()
+
+    # Simulate an image (in practice, this would come from camera)
+    dummy_image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+
+    # Add some colored rectangles to simulate objects
+    cv2.rectangle(dummy_image, (100, 100), (150, 150), (0, 0, 255), -1)  # Red
+    cv2.rectangle(dummy_image, (200, 200), (250, 250), (0, 255, 0), -1)  # Green
+    cv2.rectangle(dummy_image, (300, 300), (350, 350), (255, 0, 0), -1)  # Blue
+
+    # Process the scene
+    objects = pms.process_scene(dummy_image)
+    print(f"Detected {len(objects)} objects:")
+    for obj in objects:
+        print(f"  - {obj['name']} at {obj['pose']['position'] if 'pose' in obj else 'unknown'}")
+
+    # Test object detection
+    pms.detect_object('red')
+
+    # Test picking
+    pms.pick_object('red_cube')
+
+
+if __name__ == "__main__":
+    example_perception_manipulation()
+```
+
+## System Integration
+
+### Main Orchestration System
+
+Combine all components into the main system:
+
+```python
+# main_system.py
+import threading
+import time
+from queue import Queue
+from speech_to_action import NaturalLanguageProcessor, SpeechToActionPipeline
+from planning_navigation import NavigationSystem
+from perception_manipulation import PerceptionManipulationSystem
+from typing import Dict, Any, Callable
+
+
+class RobotInterface:
+    """Interface to interact with the physical or simulated robot"""
+    def __init__(self):
+        self.current_location = (0.0, 0.0)
+        self.battery_level = 100.0
+        self.status = "idle"
+
+    def move_to_location(self, location_name: str):
+        """Move robot to specified location"""
+        print(f"Moving robot to {location_name}")
+        # In a real system, this would send commands to the robot
+        time.sleep(2)  # Simulate movement time
+        self.status = f"at_{location_name}"
+        print(f"Robot arrived at {location_name}")
+
+    def pick_object(self, object_name: str):
+        """Pick up an object"""
+        print(f"Picking up {object_name}")
+        # In a real system, this would control the manipulator
+        time.sleep(1)  # Simulate action time
+        print(f"Successfully picked up {object_name}")
+
+    def place_object(self, object_name: str, location: str):
+        """Place an object at location"""
+        print(f"Placing {object_name} at {location}")
+        # In a real system, this would control the manipulator
+        time.sleep(1)  # Simulate action time
+        print(f"Successfully placed {object_name} at {location}")
+
+    def detect_object(self, object_name: str):
+        """Detect an object in the environment"""
+        print(f"Looking for {object_name}")
+        # In a real system, this would use perception system
+        time.sleep(0.5)  # Simulate processing time
+        print(f"Detected {object_name}")
+
+    def follow_person(self):
+        """Follow a person"""
+        print("Following person")
+        # In a real system, this would use tracking algorithms
+        self.status = "following"
+
+    def greet_person(self):
+        """Greet a person"""
+        print("Hello! How can I help you?")
+        # In a real system, this might trigger speech synthesis
+        time.sleep(1)
+        print("Greeting completed")
+
+
+class AutonomousHumanoidSystem:
+    def __init__(self):
+        # Initialize all subsystems
+        self.nlp_processor = NaturalLanguageProcessor()
+        self.speech_pipeline = SpeechToActionPipeline(self.nlp_processor)
+        self.navigation_system = NavigationSystem()
+        self.perception_manipulation = PerceptionManipulationSystem()
+        self.robot_interface = RobotInterface()
+
+        # Threading components
+        self.command_queue = Queue()
+        self.running = False
+        self.main_thread = None
+
+    def start_system(self):
+        """Start the autonomous system"""
+        self.running = True
+        self.main_thread = threading.Thread(target=self.main_loop)
+        self.main_thread.start()
+        print("Autonomous Humanoid System started")
+
+    def stop_system(self):
+        """Stop the autonomous system"""
+        self.running = False
+        if self.main_thread:
+            self.main_thread.join()
+        print("Autonomous Humanoid System stopped")
+
+    def main_loop(self):
+        """Main system loop"""
+        while self.running:
+            # Check for new commands
+            if not self.command_queue.empty():
+                command = self.command_queue.get()
+                self.execute_command(command)
+
+            # Update systems periodically
+            self.update_systems()
+
+            time.sleep(0.1)  # Small delay to prevent busy waiting
+
+    def update_systems(self):
+        """Update all subsystems"""
+        # In a real system, this would update sensor data, maps, etc.
+        pass
+
+    def execute_command(self, command: Dict[str, Any]):
+        """Execute a parsed command"""
+        print(f"Executing command: {command}")
+
+        action = command.get('action')
+        entities = command.get('entities', {})
+
+        if action == 'move':
+            location = entities.get('location', 'default')
+            self.robot_interface.move_to_location(location)
+
+        elif action == 'pick':
+            obj = entities.get('object', 'default')
+            # First, detect the object in the current environment
+            self.perception_manipulation.detect_object(obj)
+            # Then pick it up
+            self.robot_interface.pick_object(obj)
+
+        elif action == 'place':
+            obj = entities.get('object', 'default')
+            location = entities.get('location', 'default')
+            self.robot_interface.place_object(obj, location)
+
+        elif action == 'detect':
+            obj = entities.get('object', 'default')
+            self.robot_interface.detect_object(obj)
+
+        elif action == 'follow':
+            self.robot_interface.follow_person()
+
+        elif action == 'greet':
+            self.robot_interface.greet_person()
+
+        else:
+            print(f"Unknown action: {action}")
+
+    def process_audio_command(self, audio_file=None):
+        """Process an audio command and add to execution queue"""
+        parsed_command = self.speech_pipeline.process_audio_command(audio_file)
+        if parsed_command:
+            self.command_queue.put(parsed_command)
+            print(f"Command added to queue: {parsed_command}")
+        else:
+            print("Could not parse the command")
+
+    def process_text_command(self, text: str):
+        """Process a text command and add to execution queue"""
+        parsed_command = self.nlp_processor.parse_command(text)
+        if parsed_command:
+            self.command_queue.put(parsed_command)
+            print(f"Command added to queue: {parsed_command}")
+        else:
+            print("Could not parse the command")
+
+    def get_system_status(self) -> Dict[str, Any]:
+        """Get current system status"""
+        return {
+            'robot_status': self.robot_interface.status,
+            'battery_level': self.robot_interface.battery_level,
+            'command_queue_size': self.command_queue.qsize(),
+            'current_location': self.robot_interface.current_location,
+            'running': self.running
+        }
+
+
+# Example usage and demonstration
+def demo_autonomous_system():
+    """Demonstrate the autonomous humanoid system"""
+    print("Initializing Autonomous Humanoid System...")
+    system = AutonomousHumanoidSystem()
+
+    try:
+        # Start the system
+        system.start_system()
+
+        # Give system time to initialize
+        time.sleep(1)
+
+        # Process some example commands
+        print("\n--- Demo: Processing example commands ---")
+
+        # Command 1: Move to kitchen
+        print("\nCommand: Move to kitchen")
+        system.process_text_command("Please go to the kitchen")
+        time.sleep(3)  # Wait for execution
+
+        # Command 2: Find a red object
+        print("\nCommand: Find red object")
+        system.process_text_command("Look for the red cube")
+        time.sleep(2)
+
+        # Command 3: Pick up an object
+        print("\nCommand: Pick up object")
+        system.process_text_command("Pick up the red cube")
+        time.sleep(2)
+
+        # Command 4: Place object
+        print("\nCommand: Place object at table")
+        system.process_text_command("Place the cube on the table")
+        time.sleep(2)
+
+        # Command 5: Greet
+        print("\nCommand: Greet person")
+        system.process_text_command("Say hello to me")
+        time.sleep(2)
+
+        # Check system status
+        print("\n--- System Status ---")
+        status = system.get_system_status()
+        for key, value in status.items():
+            print(f"{key}: {value}")
+
+        # Wait a bit more before stopping
+        time.sleep(1)
+
+    finally:
+        # Always stop the system
+        system.stop_system()
+
+
+def interactive_demo():
+    """Interactive demo where user can input commands"""
+    print("Starting Interactive Autonomous Humanoid System Demo")
+    print("Type commands and press Enter (type 'quit' to exit)")
+    print("Examples: 'go to kitchen', 'pick up red cube', 'find blue ball'")
+
+    system = AutonomousHumanoidSystem()
+    system.start_system()
+
+    try:
+        while True:
+            user_input = input("\nEnter command: ").strip()
+            if user_input.lower() in ['quit', 'exit', 'stop']:
+                break
+
+            if user_input:
+                system.process_text_command(user_input)
+
+                # Wait a bit to see the result
+                time.sleep(0.5)
+
+                # Show status occasionally
+                if system.command_queue.empty():
+                    status = system.get_system_status()
+                    print(f"Status: {status['robot_status']}")
+
+    finally:
+        system.stop_system()
+
+
+if __name__ == "__main__":
+    print("Autonomous Humanoid Pipeline Project")
+    print("=====================================")
+
+    # Run the demonstration
+    demo_autonomous_system()
+
+    # Uncomment the next line for interactive demo
+    # interactive_demo()
+```
+
+## Platform Setup and Deployment
+
+### Digital Twin Workstation Setup
+
+```bash
+# setup_digital_twin_workstation.sh
+#!/bin/bash
+
+echo "Setting up Digital Twin Workstation for Autonomous Humanoid System..."
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install ROS 2 Humble
+sudo apt install software-properties-common
+sudo add-apt-repository universe
+sudo apt update && sudo apt install curl -y
+curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+sudo apt update
+sudo apt install ros-humble-desktop-full
+source /opt/ros/humble/setup.bash
+
+# Install Python dependencies
+pip3 install --upgrade pip
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip3 install openai speechrecognition opencv-python open3d numpy scipy matplotlib
+pip3 install rclpy
+
+# Install NVIDIA Isaac Sim (if available)
+# This requires NVIDIA Omniverse account and GPU
+echo "Installing NVIDIA Isaac Sim dependencies..."
+sudo apt install nvidia-driver-535-server # or appropriate driver version
+sudo apt install cuda-toolkit-12-3
+
+# Install Gazebo Garden
+sudo apt install gazebo libgazebo-dev
+
+# Install additional tools
+sudo apt install git cmake build-essential python3-colcon-common-extensions python3-rosdep python3-vcstool
+
+# Create workspace
+mkdir -p ~/isaac_ws/src
+cd ~/isaac_ws
+
+# Build workspace
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+
+echo "Digital Twin Workstation setup complete!"
+echo "Please source the ROS environment:"
+echo "source /opt/ros/humble/setup.bash"
+echo "source ~/isaac_ws/install/setup.bash"
+```
+
+### Edge Kit Setup
+
+```bash
+# setup_edge_kit.sh
+#!/bin/bash
+
+echo "Setting up Physical AI Edge Kit for Autonomous Humanoid System..."
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install essential packages for edge computing
+sudo apt install build-essential cmake git python3-dev python3-pip
+pip3 install --upgrade pip
+
+# Install robotics libraries
+sudo apt install ros-humble-ros-base ros-humble-navigation2 ros-humble-nav2-bringup
+sudo apt install ros-humble-vision-opencv ros-humble-cv-bridge ros-humble-image-transport
+sudo apt install ros-humble-moveit ros-humble-moveit-visual-tools
+
+# Install AI/ML libraries optimized for edge
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip3 install tensorflow==2.13.0  # CPU version for edge
+pip3 install opencv-python-headless open3d numpy scipy
+
+# Install perception libraries
+pip3 install ultralytics  # YOLOv8 for object detection
+pip3 install mediapipe  # For pose estimation
+
+# Install speech recognition
+pip3 install speechrecognition pyaudio
+
+# Install navigation libraries
+pip3 install python-qt-binding tf2_ros
+
+# Create robot workspace
+mkdir -p ~/edge_robot_ws/src
+cd ~/edge_robot_ws
+
+# Source ROS
+source /opt/ros/humble/setup.bash
+
+# Build workspace
+colcon build --packages-select robot_hardware_interface perception_pipeline navigation_system
+
+echo "Edge Kit setup complete!"
+echo "Remember to configure for your specific hardware constraints"
+```
+
+### Cloud-Native Environment Setup
+
+```yaml
+# k8s_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: humanoid-robot-controller
+  labels:
+    app: humanoid-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: humanoid-controller
+  template:
+    metadata:
+      labels:
+        app: humanoid-controller
+    spec:
+      containers:
+      - name: robot-core
+        image: robot/controller:latest
+        ports:
+        - containerPort: 9090
+        env:
+        - name: ROS_DOMAIN_ID
+          value: "1"
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: "all"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "4Gi"
+            cpu: "1000m"
+            nvidia.com/gpu: 1
+        volumeMounts:
+        - name: robot-data
+          mountPath: /data
+      volumes:
+      - name: robot-data
+        persistentVolumeClaim:
+          claimName: robot-storage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: humanoid-controller-service
+spec:
+  selector:
+    app: humanoid-controller
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+  type: LoadBalancer
+```
+
+## Evaluation and Metrics
+
+### Performance Evaluation
+
+```python
+# evaluation_metrics.py
+import time
+import numpy as np
+from typing import Dict, List, Tuple
+
+class SystemEvaluator:
+    def __init__(self):
+        self.metrics = {
+            'response_time': [],
+            'task_success_rate': [],
+            'navigation_accuracy': [],
+            'object_detection_accuracy': [],
+            'manipulation_success_rate': [],
+            'system_uptime': [],
+            'energy_efficiency': []
+        }
+
+    def measure_response_time(self, system_func, *args, **kwargs) -> float:
+        """Measure response time for a system function"""
+        start_time = time.time()
+        result = system_func(*args, **kwargs)
+        end_time = time.time()
+        response_time = end_time - start_time
+        self.metrics['response_time'].append(response_time)
+        return response_time, result
+
+    def evaluate_navigation(self, nav_system, start_pos: Tuple, goal_pos: Tuple) -> Dict:
+        """Evaluate navigation system performance"""
+        start_time = time.time()
+
+        # Plan and execute navigation
+        success = nav_system.plan_to_location(goal_pos[0], goal_pos[1])
+
+        end_time = time.time()
+        execution_time = end_time - start_time
+
+        # Calculate metrics
+        distance_traveled = self.calculate_path_length(nav_system.path)
+        straight_line_distance = self.euclidean_distance(start_pos, goal_pos)
+        efficiency_ratio = straight_line_distance / distance_traveled if distance_traveled > 0 else 0
+
+        navigation_metrics = {
+            'success': success,
+            'execution_time': execution_time,
+            'path_efficiency': efficiency_ratio,
+            'distance_traveled': distance_traveled,
+            'straight_line_distance': straight_line_distance
+        }
+
+        self.metrics['navigation_accuracy'].append(navigation_metrics)
+        return navigation_metrics
+
+    def evaluate_object_detection(self, detector, test_images: List[np.ndarray], ground_truth: List[Dict]) -> Dict:
+        """Evaluate object detection performance"""
+        total_precision = 0
+        total_recall = 0
+        total_f1 = 0
+
+        for img, gt in zip(test_images, ground_truth):
+            detected = detector.detect_objects(img)
+
+            # Calculate precision, recall, F1 for this image
+            tp, fp, fn = self.calculate_detection_stats(detected, gt)
+
+            precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+            recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+            f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+            total_precision += precision
+            total_recall += recall
+            total_f1 += f1
+
+        avg_precision = total_precision / len(test_images)
+        avg_recall = total_recall / len(test_images)
+        avg_f1 = total_f1 / len(test_images)
+
+        detection_metrics = {
+            'average_precision': avg_precision,
+            'average_recall': avg_recall,
+            'average_f1': avg_f1,
+            'total_images': len(test_images)
+        }
+
+        self.metrics['object_detection_accuracy'].append(detection_metrics)
+        return detection_metrics
+
+    def evaluate_task_completion(self, system, test_tasks: List[Dict]) -> Dict:
+        """Evaluate overall task completion success rate"""
+        successful_tasks = 0
+        total_tasks = len(test_tasks)
+
+        for task in test_tasks:
+            success = self.execute_and_evaluate_task(system, task)
+            if success:
+                successful_tasks += 1
+
+        success_rate = successful_tasks / total_tasks if total_tasks > 0 else 0
+
+        task_metrics = {
+            'successful_tasks': successful_tasks,
+            'total_tasks': total_tasks,
+            'success_rate': success_rate
+        }
+
+        self.metrics['task_success_rate'].append(success_rate)
+        return task_metrics
+
+    def calculate_detection_stats(self, detected: List[Dict], ground_truth: List[Dict]) -> Tuple[int, int, int]:
+        """Calculate true positives, false positives, false negatives"""
+        # This is a simplified version - in practice, you'd use IoU matching
+        tp = min(len(detected), len(ground_truth))  # Simplified
+        fp = max(0, len(detected) - len(ground_truth))
+        fn = max(0, len(ground_truth) - len(detected))
+
+        return tp, fp, fn
+
+    def calculate_path_length(self, path: List[Tuple[int, int]]) -> float:
+        """Calculate total length of a path"""
+        if len(path) < 2:
+            return 0
+
+        total_length = 0
+        for i in range(1, len(path)):
+            dx = path[i][0] - path[i-1][0]
+            dy = path[i][1] - path[i-1][1]
+            total_length += np.sqrt(dx*dx + dy*dy)
+
+        return total_length
+
+    def euclidean_distance(self, pos1: Tuple, pos2: Tuple) -> float:
+        """Calculate Euclidean distance between two points"""
+        return np.sqrt((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2)
+
+    def execute_and_evaluate_task(self, system, task: Dict) -> bool:
+        """Execute a task and evaluate its success"""
+        # In a real system, this would execute the task and check for success
+        # For this example, we'll simulate success/failure
+        time.sleep(0.1)  # Simulate task execution time
+        return np.random.random() > 0.2  # 80% success rate for simulation
+
+    def generate_evaluation_report(self) -> str:
+        """Generate a comprehensive evaluation report"""
+        report = []
+        report.append("=== Autonomous Humanoid System Evaluation Report ===\n")
+
+        # Response time metrics
+        if self.metrics['response_time']:
+            avg_response = np.mean(self.metrics['response_time'])
+            report.append(f"Average Response Time: {avg_response:.3f}s")
+            report.append(f"Response Time Std Dev: {np.std(self.metrics['response_time']):.3f}s\n")
+
+        # Task success rate
+        if self.metrics['task_success_rate']:
+            avg_success_rate = np.mean(self.metrics['task_success_rate'])
+            report.append(f"Average Task Success Rate: {avg_success_rate:.2%}\n")
+
+        # Navigation metrics
+        if self.metrics['navigation_accuracy']:
+            nav_results = self.metrics['navigation_accuracy'][-1]  # Latest result
+            report.append(f"Navigation Success: {nav_results['success']}")
+            report.append(f"Navigation Execution Time: {nav_results['execution_time']:.3f}s")
+            report.append(f"Path Efficiency: {nav_results['path_efficiency']:.2%}\n")
+
+        # Object detection metrics
+        if self.metrics['object_detection_accuracy']:
+            det_results = self.metrics['object_detection_accuracy'][-1]  # Latest result
+            report.append(f"Detection Precision: {det_results['average_precision']:.2%}")
+            report.append(f"Detection Recall: {det_results['average_recall']:.2%}")
+            report.append(f"Detection F1 Score: {det_results['average_f1']:.2%}\n")
+
+        # System statistics
+        total_evaluations = sum(len(v) for v in self.metrics.values())
+        report.append(f"Total Evaluations Performed: {total_evaluations}")
+
+        return "\n".join(report)
+
+
+# Example usage
+def run_evaluation():
+    evaluator = SystemEvaluator()
+
+    # Simulate some evaluations
+    # In practice, you would connect to your actual system components
+
+    print(evaluator.generate_evaluation_report())
+
+
+if __name__ == "__main__":
+    run_evaluation()
+```
+
+## Assessment Rubric
+
+### Capstone Project Evaluation Criteria
+
+| Component | Weight | Criteria |
+|-----------|--------|----------|
+| **System Integration** | 25% | Successful integration of speech, planning, navigation, perception, and manipulation |
+| **Speech Interface** | 15% | Natural language understanding and command execution |
+| **Navigation System** | 15% | Path planning and execution accuracy |
+| **Perception System** | 15% | Object detection and pose estimation quality |
+| **Manipulation System** | 15% | Grasping and placement success rate |
+| **System Performance** | 10% | Response time, reliability, and efficiency |
+| **Documentation** | 5% | Clear documentation and code quality |
+
+### Grading Scale
+
+- **A (90-100%)**: All components fully functional with high performance, exceptional integration
+- **B (80-89%)**: All components functional with good performance, minor integration issues
+- **C (70-79%)**: Most components functional with acceptable performance, noticeable integration gaps
+- **D (60-69%)**: Basic functionality present but with significant performance or integration issues
+- **F (<60%)**: Major components missing or non-functional
+
+## Resources and Further Reading
+
+- [NVIDIA Isaac Documentation](https://docs.nvidia.com/isaac/)
+- [ROS 2 Navigation Stack](https://navigation.ros.org/)
+- [OpenAI API Documentation](https://platform.openai.com/docs/introduction)
+- [Computer Vision Models for Robotics](https://arxiv.org/abs/2103.09304)
+- [Humanoid Robot Control Systems](https://ieeexplore.ieee.org/document/9309882)
+
+## Conclusion
+
+This capstone project demonstrates the integration of multiple complex systems into a unified autonomous humanoid pipeline. Successfully completing this project shows proficiency in:
+
+- Multi-modal AI integration (speech, vision, planning)
+- Real-time system orchestration
+- Hardware-software co-design considerations
+- Performance optimization across system components
+- End-to-end system validation and evaluation
+
+The skills developed in this project form the foundation for advanced robotics research and development in the field of physical AI and humanoid robotics.

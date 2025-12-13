@@ -1,0 +1,117 @@
+.feedbackContainer {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  background-color: #f9f9f9;
+}
+
+.feedbackContainer h3 {
+  margin-top: 0;
+  color: #2c3e50;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.feedbackForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ratingSection, .difficultySection, .commentSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ratingSection label, .difficultySection label, .commentSection label {
+  font-weight: bold;
+  color: #34495e;
+}
+
+.ratingStars {
+  display: flex;
+  gap: 4px;
+}
+
+.star {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  color: #bdc3c7;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all 0.2s;
+}
+
+.star:hover, .star.filled {
+  color: #f39c12;
+  border-color: #f39c12;
+  transform: scale(1.1);
+}
+
+.select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.textarea {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.submitBtn, .resetBtn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+  align-self: flex-start;
+}
+
+.submitBtn {
+  background-color: #3498db;
+  color: white;
+}
+
+.submitBtn:hover {
+  background-color: #2980b9;
+}
+
+.resetBtn {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.resetBtn:hover {
+  background-color: #7f8c8d;
+}
+
+.feedbackConfirmation {
+  text-align: center;
+  padding: 20px;
+}
+
+.feedbackConfirmation h3 {
+  color: #27ae60;
+  margin-top: 0;
+}
+
+.feedbackConfirmation p {
+  color: #2c3e50;
+  margin-bottom: 16px;
+}
