@@ -1,0 +1,97 @@
+.interactiveDemoContainer {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  padding: var(--ifm-global-spacing);
+  margin: var(--ifm-global-spacing) 0;
+  background-color: var(--ifm-background-surface-color);
+}
+
+.interactiveDemoHeader {
+  margin-bottom: var(--ifm-global-spacing);
+}
+
+.interactiveDemoHeader h3 {
+  margin: 0 0 var(--ifm-global-spacing) 0;
+  color: var(--ifm-color-primary);
+}
+
+.codeEditor {
+  margin: var(--ifm-global-spacing) 0;
+}
+
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: calc(var(--ifm-global-spacing) / 2);
+}
+
+.languageLabel {
+  font-weight: bold;
+  color: var(--ifm-color-primary);
+  background-color: var(--ifm-color-emphasis-100);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--ifm-global-radius);
+  font-size: 0.8rem;
+}
+
+.editorActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.runButton {
+  background-color: var(--ifm-color-success);
+}
+
+.runButton:hover {
+  background-color: var(--ifm-color-success-dark);
+}
+
+.resetButton {
+  background-color: var(--ifm-color-secondary);
+}
+
+.resetButton:hover {
+  background-color: var(--ifm-color-secondary-dark);
+}
+
+.codeTextarea {
+  width: 100%;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: var(--ifm-code-font-size);
+  padding: var(--ifm-global-spacing);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  background-color: var(--ifm-pre-background);
+  color: var(--ifm-font-color-base);
+  resize: vertical;
+  min-height: 200px;
+}
+
+.outputPanel {
+  margin-top: var(--ifm-global-spacing);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  overflow: hidden;
+}
+
+.outputHeader {
+  background-color: var(--ifm-color-emphasis-100);
+  padding: 0.5rem var(--ifm-global-spacing);
+  font-weight: bold;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.outputContent {
+  padding: var(--ifm-global-spacing);
+  margin: 0;
+  background-color: var(--ifm-pre-background);
+  color: var(--ifm-font-color-base);
+  max-height: 200px;
+  overflow: auto;
+}
+
+.demoContent {
+  margin-top: var(--ifm-global-spacing);
+}

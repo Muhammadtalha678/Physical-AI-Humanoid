@@ -1,0 +1,8 @@
+{
+  "label": "Platform Setups",
+  "position": 5,
+  "link": {
+    "type": "generated-index",
+    "description": "Setup instructions for different platform configurations: Digital Twin workstation, Physical AI Edge Kit, and cloud-native environment."
+  }
+}

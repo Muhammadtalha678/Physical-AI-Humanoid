@@ -1,0 +1,169 @@
+/**
+ * Custom CSS for Physical AI & Humanoid Robotics Textbook
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Custom styling for interactive components */
+.interactive-demo-container {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  padding: var(--ifm-global-spacing);
+  margin: var(--ifm-global-spacing) 0;
+}
+
+.interactive-demo-header {
+  font-weight: bold;
+  margin-bottom: var(--ifm-global-spacing);
+  color: var(--ifm-color-primary);
+}
+
+/* Custom styling for assessment components */
+.assessment-container {
+  background-color: var(--ifm-color-emphasis-100);
+  border-left: 4px solid var(--ifm-color-primary);
+  padding: var(--ifm-global-spacing);
+  margin: var(--ifm-global-spacing) 0;
+}
+
+.assessment-question {
+  font-weight: 500;
+  margin-bottom: var(--ifm-global-spacing);
+}
+
+/* Course-specific styling */
+.week-introduction {
+  background-color: var(--ifm-color-emphasis-100);
+  padding: 1rem;
+  border-radius: var(--ifm-global-radius);
+  margin: 1rem 0;
+}
+
+.learning-objectives {
+  background-color: #f8f9fa;
+  border-left: 4px solid #25c2a0;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.learning-objectives ul {
+  margin-bottom: 0;
+}
+
+/* Code block styling for robotics/Python content */
+.language-python {
+  background-color: #f6f8fa;
+}
+
+html[data-theme='dark'] .language-python {
+  background-color: #161b1f;
+}
+
+/* Navigation styling */
+.navbar-course-title {
+  font-weight: bold;
+  color: #25c2a0;
+}
+
+/* Responsive design for mobile compatibility */
+@media (max-width: 768px) {
+  .navbar-sidebar__back {
+    font-size: 1rem;
+  }
+
+  .menu {
+    font-size: 0.9rem;
+  }
+
+  .menu__list {
+    margin: 0;
+  }
+
+  .menu__link {
+    padding: 0.5rem 1rem;
+  }
+
+  /* Adjust heading sizes on mobile */
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  /* Adjust content spacing on mobile */
+  .container {
+    padding: 0.75rem;
+  }
+
+  /* Make sure interactive components are mobile-friendly */
+  .interactive-demo-container,
+  .assessment-container,
+  .code-runner-container {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
+
+  /* Adjust code blocks for mobile */
+  .prism-code {
+    font-size: 0.8rem;
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Further adjustments for smaller screens */
+  .navbar__brand {
+    max-width: 70%;
+  }
+
+  .navbar__title {
+    font-size: 0.9rem;
+  }
+
+  .main-wrapper {
+    padding: 0.5rem 0;
+  }
+
+  /* Adjust sidebar for very small screens */
+  .sidebar {
+    padding: 0.5rem;
+  }
+
+  /* Make sure buttons are tappable on mobile */
+  .button {
+    padding: 0.5rem 1rem;
+    min-height: 40px;
+  }
+}

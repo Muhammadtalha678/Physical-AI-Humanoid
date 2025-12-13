@@ -1,0 +1,8 @@
+{
+  "label": "Development Documentation",
+  "position": 7,
+  "link": {
+    "type": "generated-index",
+    "description": "Comprehensive documentation for developing and maintaining the Physical AI & Humanoid Robotics textbook"
+  }
+}
