@@ -29,7 +29,7 @@ async def run_query_with_context(ctx: RunContextWrapper[QdrantContext], query: s
             limit=5,
           
         )
-        print(search_result)
+        # print(search_result)
         return search_result
         return {
             "results": [
@@ -72,7 +72,7 @@ async def handle_query_operation(agent_config, query, qdrant_client=None):
             context=qdrant_context
         )
 
-        return result.final_output
+        return {"status": "success", "query": query, "result": result.final_output}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
