@@ -6,6 +6,13 @@ from src.lib.configs import settings
 from src.lib.openaiagentsdk_config import AgentConfig
 from src.lib.vectordb_connection import get_qdrant
 
+import httpx
+import asyncio
+async def invoke_render(client:httpx.AsyncClient):
+    while True:
+        print("request send")
+        await client.get("https://rag-backend-22uh.onrender.com") 
+        await asyncio.sleep(300)  
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,8 +30,11 @@ async def lifespan(app: FastAPI):
     app.state.qdrant_client = qdrant_client
     print("Qdrant client initialized and stored in app state")
 
+    client = httpx.AsyncClient()
+    task = asyncio.create_task(invoke_render(client))
     yield
-
+    task.cancel()
+    await client.aclose()
     print("closed!")
 
 
@@ -33,7 +43,8 @@ app.include_router(embeddings_router, prefix="/api")
 app.include_router(query_router, prefix="/api")
 
 
-@app.get("/health")
+
+@app.get("/")
 async def health_check():
     return {"status": "healthy", "service": "RAG Backend System"}
 
