@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     openrouter_model_name: str
     google_api_key: str
     embedding_model: str
+    backend_url: str
+    frontend_url: str
+    localhost_url: str
 
     class Config:
         env_file = ".env"

@@ -12,7 +12,7 @@ import asyncio
 async def invoke_render(client:httpx.AsyncClient):
     while True:
         print("request send")
-        await client.get("https://rag-backend-22uh.onrender.com") 
+        await client.get(settings.backend_url) 
         await asyncio.sleep(300)  
 
 @asynccontextmanager
@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this in production for security
+    allow_origins=[settings.localhost_url, settings.frontend_url],  # Adjust this in production for security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
