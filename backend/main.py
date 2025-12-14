@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.routers.embeddings_router import router as embeddings_router
 from src.routers.query_router import router as query_router
 from contextlib import asynccontextmanager
@@ -39,6 +40,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this in production for security
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(embeddings_router, prefix="/api")
 app.include_router(query_router, prefix="/api")
 
