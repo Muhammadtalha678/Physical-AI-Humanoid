@@ -36,6 +36,9 @@ const config: Config = {
     defaultLocale: 'en',
     locales: ['en'],
   },
+  customFields: {
+    apiEndpoint: process.env.API_ENDPOINT,
+  },
 
   presets: [
     [
